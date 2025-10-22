@@ -1,0 +1,7 @@
+# Directories
+.Xil/
+.dvt/
+
+# Files
+*.log
+*.pb
