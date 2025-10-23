@@ -1,7 +1,10 @@
 # Directories
 .Xil/
 .dvt/
+.proj/
 
 # Files
 *.log
 *.pb
+*.jou
+
