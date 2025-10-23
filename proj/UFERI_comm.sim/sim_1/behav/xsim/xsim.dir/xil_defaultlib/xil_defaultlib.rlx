@@ -1,0 +1,8 @@
+0.7
+2020.2
+Oct 19 2021
+02:56:52
+/home/student/hsikora/UFERI_comm/dv/tb_top.sv,1761238997,systemVerilog,,,,tb_top,,uvm,,,,,,
+/home/student/hsikora/UFERI_comm/proj/UFERI_comm.sim/sim_1/behav/xsim/glbl.v,1634335545,verilog,,,,glbl,,uvm,,,,,,
+/home/student/hsikora/UFERI_comm/rtl/sreg_ctrl.sv,1761239047,systemVerilog,,/home/student/hsikora/UFERI_comm/rtl/sreg_model.sv,,sreg_ctrl,,uvm,,,,,,
+/home/student/hsikora/UFERI_comm/rtl/sreg_model.sv,1761236287,systemVerilog,,/home/student/hsikora/UFERI_comm/dv/tb_top.sv,,sreg_model,,uvm,,,,,,
