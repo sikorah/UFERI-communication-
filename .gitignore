@@ -1,10 +1,11 @@
 # Directories
-.Xil/
-.dvt/
-.proj/
+.Xil\
+.dvt\
+.proj\
 
 # Files
 *.log
 *.pb
 *.jou
+*.txt
 

@@ -23,7 +23,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         state <= IDLE;
         data_out <= 42'd0;
         clk_div <= 2'd0;
-        slck <= 1'b0;
+        sclk <= 1'b0;
         ready <= 1'b1;
         shift <= 1'b0;
         shift_cnt <= 6'd0;
@@ -40,7 +40,7 @@ always_ff @(posedge clk or negedge rst_n) begin
                 if (ready) begin
                     state <= LOAD_SREG;
                 end else begin
-                    state <= IDLE:
+                    state <= IDLE;
                 end
             end
             LOAD_SREG: begin
@@ -57,7 +57,7 @@ always_ff @(posedge clk or negedge rst_n) begin
                     shift_cnt <= 6'd0;
                 end else begin
                     shift_cnt <= shift_cnt + 6'd1;
-                    state <= READ_SREG
+                    state <= READ_SREG;
                 end
             end
             default: begin
