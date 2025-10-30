@@ -8,6 +8,7 @@ module sreg_ctrl (
 
     output logic ready,
     output logic shift,
+    output logic sclk,
     output logic [41:0] data_out
 );
 
@@ -22,9 +23,11 @@ always_ff @(posedge clk or negedge rst_n) begin
         ready <= '0;
         shift <= '0;
         data_out <= '0;
+        sclk <= '0;
     end else begin
         case (state)
             IDLE: begin
+                sclk <= '1;
                 if(ready) begin
                     state <= LOAD_SREG;
                 end else begin
@@ -32,6 +35,7 @@ always_ff @(posedge clk or negedge rst_n) begin
                 end
             end
             LOAD_SREG: begin
+                sclk <= ~sclk;
                 data_out <= data_in;
                 state <= READ_SREG;
             end
