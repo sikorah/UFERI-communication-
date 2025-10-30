@@ -2,7 +2,7 @@
 
 module tb_top();
 logic clk;
-//logic sclk;
+logic sclk;
 logic rst_n;
 logic shift;
 //logic ready;
@@ -12,27 +12,34 @@ logic [41:0] pixel_in;
 //logic [41:0] data_in;
 //logic [1:0] sreg_in;
 
+//logic serial_out;
 logic [1:0] sreg_out;
 //logic [41:0] data_out;
+
+logic write_cfg;
+logic [41:0] cfg_out;
+
+sreg_model u_sreg_model(
+    .sclk,
+    .shift,
+    .serial_in,
+    .pixel_in,
+    .sreg_out,
+    .write_cfg,
+    .cfg_out
+);
 
 /*sreg_ctrl u_sreg_ctrl(
     .clk,
     .rst_n,
     .data_in,
-    .sreg_in,
+    .sreg_in(sreg_out),
     .ready,
-    .shift,
-    .sclk,
+    .shift(shift),
+    .sclk(sclk),
+    .serial_out(serial_in),
     .data_out
 );*/
-
-sreg_model u_sreg_model(
-    .sclk(clk),
-    .shift,
-    .serial_in,
-    .pixel_in,
-    .sreg_out
-);
 
 initial begin
     clk = '0;
@@ -51,13 +58,21 @@ initial begin
     rst_n = '1;
 end
 
-task test_sreg_model();
+task write_sreg(input logic [41:0] test_data);
 
-    // PISO Test
-    logic [41:0] test_data = 42'b10_0110_1011_0100_1011_0101_1111_0110_1001_0010_1011;
-    shift <= '0;                                        // ^ [20]
+    @(posedge clk);
+    sclk <= '1;
+    for (int i = 0; i<84; ++i) begin
+        @(posedge clk);
+        sclk <= ~sclk;
+        if(sclk == 1) begin
+            shift <= '1;
+            serial_in <= test_data[41];
+            test_data <= test_data << 1;
+        end
+    end
 
-    pixel_in <= test_data;
+ /*   pixel_in <= test_data;
     @(posedge clk);
 
     shift <= '1;
@@ -76,12 +91,30 @@ task test_sreg_model();
         test_data <= test_data << 1;
         @(posedge clk);
     end
-    shift <= '0;
+    shift <= '0;*/
 endtask
 
+task write_config(input logic [41:0] test_data);
+
+    @(posedge clk);
+    sclk <= '1;
+    for (int i = 0; i<84; ++i) begin
+        @(posedge clk);
+        sclk <= ~sclk;
+        if(sclk == 1) begin
+            shift <= '1;
+            serial_in <= test_data[41];
+            test_data <= test_data << 1;
+            write_cfg <= i == 82 ? 1'b1 : 1'b0;
+        end
+    end
+    @(posedge clk);
+    write_cfg <= 0;
+
+    endtask
+
 /*task test_sreg_control();
-    logic [41:0] test_data = 42'b10_0110_1011_0100_1011_0100_1111_0110_1001_0010_1010;
-    shift <= '0;
+    logic [41:0] test_data = 42'b10_0110_1011_0100_1011_0101_1111_0110_1001_0010_1011;
     ready <= '0;
 
     data_in <= test_data;
@@ -92,26 +125,28 @@ endtask
         @(posedge clk);
     end
 
-    shift <= '0;
     ready <= '0;
 endtask*/
 
 initial begin
+    logic [41:0] test_data1 = 42'b10_0110_1011_0100_1011_0101_1111_0110_1001_0010_1011;
+    logic [41:0] test_data2 = ~(42'b10_0110_1011_0110_1011_0100_1111_0110_1001_0010_1011);
     shift <= '0;
     serial_in <= '0;
-    //ready <= '0;
+    sclk <= '1;
     
     repeat (4)
         @(posedge clk);
 
-    test_sreg_model();
+    write_sreg(test_data1);
+    write_config(test_data2);
 
     repeat (4)
         @(posedge clk);
 
     shift <= '0;
     serial_in <= '0;
-    //ready <= '0;
+    sclk <= '1;
     $finish;
 
 end
