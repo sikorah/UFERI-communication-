@@ -4,7 +4,7 @@ module sreg_ctrl (
     input logic clk,
     input logic rst_n,
 
-
+    // porty do FSM
     input logic cmd_valid,
     input logic [2:0] cmd,
     input logic [41:0] data_in,
@@ -41,9 +41,33 @@ always_ff @(posedge clk) begin
                     cmd_ready <= '0;
                     case(cmd) 
                        0: begin
+                        serial_out <= 42'b0;
+                        shift <= '1;
+                        write_cfg <= '0;
                         state <= READ_SREG;
                        end 
                        1: begin
+                        serial_out <= 42'b0;
+                        shift <= '1;
+                        write_cfg <= '0;
+                        state <= LOAD_SREG;
+                       end
+                       2: begin
+                        shift <= '1;
+                        write_cfg <= '0;
+                        state <= READ_SREG;
+                       end
+                       3: begin
+                        shift <= '1;
+                        write_cfg <= '1;
+                        state <= LOAD_SREG;
+                       end
+                       4: begin
+                        shift <= '1;
+                        write_cfg <= '1;
+                        state <= READ_SREG;
+                       end
+                       5: begin
                         state <= LOAD_SREG;
                        end
                     endcase
