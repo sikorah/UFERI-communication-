@@ -24,8 +24,8 @@ module sreg_ctrl (
 reg [41:0]  data_int;
 
 // liczniki 
-logic [5:0] counter_int;
-logic [5:0] counter_limit;
+logic [6:0] counter_int;
+logic [6:0] counter_limit;
 
 typedef enum {IDLE, LOAD_SREG, READ_SREG} op_type_t;
 op_type_t state;
@@ -49,8 +49,8 @@ always_ff @(posedge clk) begin
         sclk <= 1'b1;
         serial_out <= 1'b0;
         write_cfg <= 1'b0;
-        counter_int <= 6'b0;
-        counter_limit <= 6'b0;
+        counter_int <= 7'b0;
+        counter_limit <= 7'b0;
         state <= IDLE;
     end else begin
         data_int <= data_in;
@@ -58,40 +58,40 @@ always_ff @(posedge clk) begin
             IDLE: begin
                 sclk <= sclk;
                 shift <= shift;
-                counter_limit <= 6'b0;
+                counter_limit <= 7'b0;
                 if (cmd_valid && cmd_ready) begin
                     cmd_ready <= 1'b0;
                     case(cmd)
                         PIX_WRITE: begin
-                            counter_limit <= 6'd84;
+                            counter_limit <= 7'd84;
                             state <= LOAD_SREG;
                         end
                         PIX_READ: begin
-                            counter_limit <= 6'd42;
+                            counter_limit <= 7'd42;
                             state <= READ_SREG;
                         end
                         PIX_READ_END: begin
-                            counter_limit <= 6'd6;
+                            counter_limit <= 7'd6;
                             state <= READ_SREG;
                         end
                         WRITE_PCLK_0: begin
-                            counter_limit <= 6'd20;
+                            counter_limit <= 7'd20;
                             state <= LOAD_SREG;
                         end
                         WRITE_PCLK_1: begin
-                            counter_limit <= 6'd20;
+                            counter_limit <= 7'd20;
                             state <= LOAD_SREG;
                         end
                         WRITE_FULL_PCLK_0: begin
-                            counter_limit <= 6'd84;
+                            counter_limit <= 7'd84;
                             state <= LOAD_SREG;
                         end
                         WRITE_FULL_PCLK_1: begin
-                            counter_limit <= 6'd84;
+                            counter_limit <= 7'd84;
                             state <= LOAD_SREG;
                         end
                         SREG_READ: begin
-                            counter_limit <= 6'd46;
+                            counter_limit <= 7'd46;
                             state <= READ_SREG;
                         end
                         default: begin
@@ -118,7 +118,7 @@ always_ff @(posedge clk) begin
                         end else begin
                             shift <= 1'b0;
                             write_cfg <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end
@@ -136,7 +136,7 @@ always_ff @(posedge clk) begin
                         end else begin
                             shift <= 1'b0;
                             write_cfg <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end
@@ -154,7 +154,7 @@ always_ff @(posedge clk) begin
                         end else begin
                             shift <= 1'b0;
                             write_cfg <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end
@@ -172,7 +172,7 @@ always_ff @(posedge clk) begin
                         end else begin
                             shift <= 1'b0;
                             write_cfg <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end
@@ -190,7 +190,7 @@ always_ff @(posedge clk) begin
                         end else begin
                             shift <= 1'b0;
                             write_cfg <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end
@@ -211,7 +211,7 @@ always_ff @(posedge clk) begin
                             shift <= 1'b1;
                         end else begin
                             shift <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end
@@ -224,7 +224,7 @@ always_ff @(posedge clk) begin
                             state <= READ_SREG;
                         end else begin
                             shift <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end
@@ -240,7 +240,7 @@ always_ff @(posedge clk) begin
                             //dvalid_out <= 1'b1;
                         end else begin
                             shift <= 1'b0;
-                            counter_int <= 6'b0;
+                            counter_int <= 7'b0;
                             state <= IDLE;
                         end
                     end

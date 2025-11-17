@@ -37,38 +37,68 @@ sreg_ctrl u_sreg_ctrl(
 );
     
 sreg_model u_sreg_model(
-    .sclk       (sclk),
-    .shift      (shift),
-    .serial_in  (serial_out),
-    .write_cfg  (write_cfg),
-    .pixel_in   (data_in),
-    .sreg_out   (sreg_in),
-    .cfg_out    (cfg_out)
+    .sclk       (),
+    .shift      (),
+    .serial_in  (),
+    .write_cfg  (),
+    .pixel_in   (),
+    .sreg_out   (),
+    .cfg_out    ()
 );
 
 // generacja zegara i resetu
 
 initial begin
     clk = '0;
-    rst_n = '0;
 
     forever begin
-        #5 clk = ~clk;
+        #2.5 clk = ~clk;
     end
+end
 
-    repeat(84)
+initial begin
+    rst_n = '0;
+    repeat(2)
         @(posedge clk);
 
     rst_n = '1;
+    repeat (84)
+        @(posedge clk);
+
+    rst_n = '0;
 end
 
-task send_command(input logic [2:0] command, input logic [41:0] data);
+/*task send_command(input logic [2:0] command, input logic [41:0] test_data);
     @(posedge clk);
+    sclk <= '1;
     cmd <= command;
-    data_in <= data;
-    cmd_valid <= 1'b1;
+    for (int i = 0; i<84; ++i) begin
+        @(posedge clk);
+        sclk <= ~sclk;
+        if(sclk == 1) begin
+            shift <= '1;
+            serial_in <= test_data[41];
+            test_data <= test_data << 1;
+        end
+    shift <= '0;
+    end
+
+endtask*/
+
+task test_control(input logic[2:0] command, input logic [41:0] test_data);
+    shift <= '0;
+    serial_out <= '0;
+    sreg_in <= '0;
+    sclk <= '1;
+    cmd_valid <= '1;
+
     @(posedge clk);
-    cmd_valid <= 1'b0;
+
+    cmd <= command;
+    data_in <= test_data;
+
+    repeat(42)
+        @(posedge clk);
 endtask
 
 initial begin
@@ -76,10 +106,35 @@ initial begin
     logic [41:0] test_data2 = ~(42'b10_0110_1011_0110_1011_0100_1111_0110_1001_0010_1011);
 
     shift <= '0;
-    serial_in <= '0;
+    serial_out <= '0;
+    sreg_in <= '0;
     sclk <= '1;
+    cmd_valid <= '1;
 
-    repeat (2)
+    repeat(4)
+        @(posedge clk);
+
+    test_control(3'b000, test_data1); //PIX_WRITE
+
+    repeat(2);
+        @(posedge clk);
+
+    test_control(3'b001, '0); //PIX_READ
+
+    repeat(2);
+        @(posedge clk);
+
+    test_control(3'b011, test_data1); //WRITE_PCLK_0
+
+    repeat(2);
+        @(posedge clk);
+
+    test_control(3'b111, '0); //SREG_READ
+
+    repeat(2);
+        @(posedge clk);
+
+    /*repeat (2)
         @(posedge clk);
 
     send_command(3'b000, test_data1); // PIX_WRITE
@@ -102,21 +157,23 @@ initial begin
     repeat (2)
         @(posedge clk);
 
-    send_command(3'b101, test_data2); // WRITE_FULL_PCLK_0
+    send_command(3'b101, test_data1); // WRITE_FULL_PCLK_0
     repeat (2)
         @(posedge clk);
 
-    send_command(3'b110, test_data2); // WRITE_FULL_PCLK_1
+    send_command(3'b110, test_data1); // WRITE_FULL_PCLK_1
     repeat (2)
         @(posedge clk);
 
     send_command(3'b111, '0); // SREG_READ
     repeat (2)
-        @(posedge clk);
+        @(posedge clk);*/
 
     shift <= '0;
-    serial_in <= '0;
+    serial_out <= '0;
+    sreg_in <= '1;
     sclk <= '1;
+    cmd_valid <= '1;
     $finish;
 end
 
