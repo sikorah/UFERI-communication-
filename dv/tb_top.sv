@@ -14,6 +14,8 @@ logic shift;
 logic sclk;
 logic serial_out;
 logic write_cfg;
+logic pclk;
+logic dvalid_out;
 
 // sygnały modelu
 logic serial_in;
@@ -33,17 +35,28 @@ sreg_ctrl u_sreg_ctrl(
     .shift      (shift),
     .sclk       (sclk),
     .serial_out (serial_out),
-    .write_cfg  (write_cfg)
+    .write_cfg  (write_cfg),
+    .pclk       (pclk),
+    .dvalid_out ()
 );
     
 sreg_model u_sreg_model(
-    .sclk       (),
-    .shift      (),
-    .serial_in  (),
-    .write_cfg  (),
+    .sclk       (sclk),
+    .shift      (shift),
+    .serial_in  (serial_out),
+    .write_cfg  (write_cfg),
     .pixel_in   (),
-    .sreg_out   (),
+    .sreg_out   (sreg_in),
     .cfg_out    ()
+);
+
+FSM u_FSM(
+    .clk(clk),
+    .rst_n(rst_n),
+    .cmd_ready(cmd_ready),
+    .cmd_valid(cmd_valid),
+    .cmd(cmd),
+    .data_in(data_in)
 );
 
 // generacja zegara i resetu
@@ -62,118 +75,77 @@ initial begin
         @(posedge clk);
 
     rst_n = '1;
-    repeat (84)
-        @(posedge clk);
-
-    rst_n = '0;
 end
 
-/*task send_command(input logic [2:0] command, input logic [41:0] test_data);
-    @(posedge clk);
-    sclk <= '1;
-    cmd <= command;
-    for (int i = 0; i<84; ++i) begin
-        @(posedge clk);
-        sclk <= ~sclk;
-        if(sclk == 1) begin
-            shift <= '1;
-            serial_in <= test_data[41];
-            test_data <= test_data << 1;
-        end
-    shift <= '0;
-    end
-
-endtask*/
-
 task test_control(input logic[2:0] command, input logic [41:0] test_data);
-    shift <= '0;
-    serial_out <= '0;
-    sreg_in <= '0;
-    sclk <= '1;
-    cmd_valid <= '1;
 
     @(posedge clk);
 
+    cmd_valid <= '1;
     cmd <= command;
     data_in <= test_data;
+    @(posedge clk);
 
-    repeat(42)
+    while(cmd_ready == 1'b0)
         @(posedge clk);
+    //comand latched
+    cmd_valid <= '0;
+    @(posedge clk);
+    while(cmd_ready == 1'b0)
+        @(posedge clk);
+    //command executed
 endtask
 
 initial begin
     logic [41:0] test_data1 = 42'b10_0110_1011_0100_1011_0101_1111_0110_1001_0010_1011;
     logic [41:0] test_data2 = ~(42'b10_0110_1011_0110_1011_0100_1111_0110_1001_0010_1011);
 
-    shift <= '0;
-    serial_out <= '0;
-    sreg_in <= '0;
-    sclk <= '1;
-    cmd_valid <= '1;
+    repeat(420)
+        @(posedge clk);
 
-    repeat(4)
+/*    repeat(2)
         @(posedge clk);
 
     test_control(3'b000, test_data1); //PIX_WRITE
 
-    repeat(2);
+    repeat(2)
         @(posedge clk);
 
     test_control(3'b001, '0); //PIX_READ
 
-    repeat(2);
+    repeat(2)
+        @(posedge clk);
+
+    test_control(3'b010, '0); //PIX_READ_END
+
+    repeat(2)
         @(posedge clk);
 
     test_control(3'b011, test_data1); //WRITE_PCLK_0
 
-    repeat(2);
+    repeat(2)
+        @(posedge clk);
+
+    test_control(3'b100, test_data2); //WRITE_PCLK_1
+
+    repeat(2)
+        @(posedge clk);
+
+    test_control(3'b101, test_data1); //WRITE_FULL_PCLK_0
+
+    repeat(2)
+        @(posedge clk);
+
+    test_control(3'b110, test_data2); //WRITE_FULL_PCLK_1
+
+    repeat(2)
         @(posedge clk);
 
     test_control(3'b111, '0); //SREG_READ
 
-    repeat(2);
-        @(posedge clk);
-
-    /*repeat (2)
-        @(posedge clk);
-
-    send_command(3'b000, test_data1); // PIX_WRITE
-    repeat (2)
-        @(posedge clk);
-
-    send_command(3'b001, '0); // PIX_READ
-    repeat (2)
-        @(posedge clk);
-
-    send_command(3'b010, '0); // PIX_READ_END
-    repeat (2)
-        @(posedge clk);
-
-    send_command(3'b011, test_data1); // WRITE_PCLK_0
-    repeat (2)
-        @(posedge clk);
-
-    send_command(3'b100, test_data1); // WRITE_PCLK_1
-    repeat (2)
-        @(posedge clk);
-
-    send_command(3'b101, test_data1); // WRITE_FULL_PCLK_0
-    repeat (2)
-        @(posedge clk);
-
-    send_command(3'b110, test_data1); // WRITE_FULL_PCLK_1
-    repeat (2)
-        @(posedge clk);
-
-    send_command(3'b111, '0); // SREG_READ
-    repeat (2)
+    repeat(2)
         @(posedge clk);*/
 
-    shift <= '0;
-    serial_out <= '0;
-    sreg_in <= '1;
-    sclk <= '1;
-    cmd_valid <= '1;
     $finish;
 end
 
