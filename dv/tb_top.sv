@@ -23,6 +23,12 @@ logic [41:0] pixel_in;
 logic [1:0] sreg_out;
 logic [41:0] cfg_out;
 
+// sygnały UART
+logic rx_din;
+logic rx_vin;
+logic [7:0] rx_dout;
+logic rx_vout;
+
 sreg_ctrl u_sreg_ctrl(
     .clk        (clk),
     .rst_n      (rst_n),
@@ -50,13 +56,24 @@ sreg_model u_sreg_model(
     .cfg_out    ()
 );
 
-FSM u_FSM(
+/*FSM u_FSM(
     .clk(clk),
     .rst_n(rst_n),
     .cmd_ready(cmd_ready),
     .cmd_valid(cmd_valid),
     .cmd(cmd),
     .data_in(data_in)
+);*/
+
+uart u_uart(
+    BAUD = 8
+)(
+    .clk        (clk),
+    .rst_n      (rst_n),
+    .rx_din     (),
+    .rx_vin     (),
+    .rx_dout    (cmd),
+    .rx_vout    ()
 );
 
 // generacja zegara i resetu
@@ -100,10 +117,7 @@ initial begin
     logic [41:0] test_data1 = 42'b10_0110_1011_0100_1011_0101_1111_0110_1001_0010_1011;
     logic [41:0] test_data2 = ~(42'b10_0110_1011_0110_1011_0100_1111_0110_1001_0010_1011);
 
-    repeat(420)
-        @(posedge clk);
-
-/*    repeat(2)
+    repeat(2)
         @(posedge clk);
 
     test_control(3'b000, test_data1); //PIX_WRITE
@@ -144,7 +158,7 @@ initial begin
     test_control(3'b111, '0); //SREG_READ
 
     repeat(2)
-        @(posedge clk);*/
+        @(posedge clk);
 
     $finish;
 end
