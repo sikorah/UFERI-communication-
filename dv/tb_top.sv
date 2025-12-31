@@ -26,8 +26,14 @@ logic [41:0] cfg_out;
 // sygnały UART
 logic rx_din;
 logic rx_vin;
-logic [7:0] rx_dout;
-logic rx_vout;
+
+logic [3:0] wdata;
+logic wr_en;
+logic full;
+logic [3:0] fifo;
+logic rd_en;
+logic empty;
+
 
 sreg_ctrl u_sreg_ctrl(
     .clk        (clk),
@@ -56,24 +62,34 @@ sreg_model u_sreg_model(
     .cfg_out    ()
 );
 
-/*FSM u_FSM(
+FSM u_FSM(
     .clk(clk),
     .rst_n(rst_n),
     .cmd_ready(cmd_ready),
     .cmd_valid(cmd_valid),
     .cmd(cmd),
-    .data_in(data_in)
-);*/
+    .fifo_in(fifo),
+    .data2ctrl(data_in)
+);
 
 uart u_uart(
-    BAUD = 8
-)(
     .clk        (clk),
     .rst_n      (rst_n),
-    .rx_din     (),
-    .rx_vin     (),
-    .rx_dout    (cmd),
-    .rx_vout    ()
+    .rx_din     (rx_din),
+    .rx_vin     (rx_vin),
+    .rx_dout    (wdata),
+    .rx_vout    (wr_en)
+);
+
+FIFO u_FIFO(
+    .clk (clk),
+    .rst_n (rst_n),
+    .wdata (wdata),
+    .wr_en (wr_en),
+    .full (full),
+    .rdata (fifo),
+    .rd_en (rd_en),
+    .empty (empty)
 );
 
 // generacja zegara i resetu
@@ -113,51 +129,83 @@ task test_control(input logic[2:0] command, input logic [41:0] test_data);
     //command executed
 endtask
 
+task test_sequence(input logic[3:0] uart);
+    
+    @(posedge clk);
+
+    //cmd_ready <= '1;
+    fifo <= uart;
+    @(posedge clk);
+
+    while(cmd_valid == 1'b0)
+        @(posedge clk);
+    //command latched
+    //cmd_ready <= '0;
+    @(posedge clk);
+    while(cmd_valid == 1'b0)
+        @(posedge clk);
+endtask
+
 initial begin
-    logic [41:0] test_data1 = 42'b10_0110_1011_0100_1011_0101_1111_0110_1001_0010_1011;
-    logic [41:0] test_data2 = ~(42'b10_0110_1011_0110_1011_0100_1111_0110_1001_0010_1011);
 
-    repeat(2)
+    test_sequence(4'b1100); // INIT
+
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b000, test_data1); //PIX_WRITE
+    test_sequence(4'b0001); // MODE_COUNT
 
-    repeat(2)
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b001, '0); //PIX_READ
+    test_sequence(4'b0010); // MODE_READ_1
 
-    repeat(2)
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b010, '0); //PIX_READ_END
+    test_sequence(4'b0011); // MODE_READ_2
 
-    repeat(2)
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b011, test_data1); //WRITE_PCLK_0
+    test_sequence(4'b0100); // MODE_READ_3
 
-    repeat(2)
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b100, test_data2); //WRITE_PCLK_1
+    test_sequence(4'b0101); // MODE_WRITE_1
 
-    repeat(2)
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b101, test_data1); //WRITE_FULL_PCLK_0
+    test_sequence(4'b0110); // MODE_WRITE_2
 
-    repeat(2)
+    //repeat(15)
+        //@(posedge clk);
+
+    //test_sequence(4'b0111); // MODE_WRITE_3
+
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b110, test_data2); //WRITE_FULL_PCLK_1
+    test_sequence(4'b1001); // PIXELS_READ
 
-    repeat(2)
+    repeat(15)
         @(posedge clk);
 
-    test_control(3'b111, '0); //SREG_READ
+    test_sequence(4'b1000); // PIXEL_CONFIG_STORE
 
-    repeat(2)
+    repeat(15)
+        @(posedge clk);
+
+    test_sequence(4'b1010); // PIXELS_CLEAR
+
+    repeat(15)
+        @(posedge clk);
+
+    test_sequence(4'b1011); // PIXELS_WRITE
+
+    repeat(15)
         @(posedge clk);
 
     $finish;

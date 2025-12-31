@@ -51,7 +51,6 @@ always_ff @(posedge clk) begin
     if (!rst_n) begin
         data_out        <= 42'b0;
         cmd_ready       <= 1'b0;
-        cmd_buf         <= 3'b000;
         shift           <= 1'b0;
         sclk            <= 1'b1;
         serial_out      <= 1'b0;
