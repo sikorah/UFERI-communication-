@@ -62,6 +62,7 @@ sreg_model u_sreg_model(
     .cfg_out    ()
 );
 
+
 FSM u_FSM(
     .clk(clk),
     .rst_n(rst_n),
@@ -146,67 +147,85 @@ task test_sequence(input logic[3:0] uart);
         @(posedge clk);
 endtask
 
+task write_sreg(input logic [41:0] test_data);
+
+    @(posedge clk);
+    sclk <= '1;
+    for (int i = 0; i<84; ++i) begin
+        @(posedge clk);
+        sclk <= ~sclk;
+        if(sclk == 1) begin
+            shift <= '1;
+            serial_in <= test_data[41];
+            test_data <= test_data << 1;
+        end
+    end
+
+endtask
+
+task write_config(input logic [41:0] test_data);
+
+    @(posedge clk);
+    sclk <= '1;
+    for (int i = 0; i<84; ++i) begin
+        @(posedge clk);
+        sclk <= ~sclk;
+        if(sclk == 1) begin
+            shift <= '1;
+            serial_in <= test_data[41];
+            test_data <= test_data << 1;
+            write_cfg <= i == 82 ? 1'b1 : 1'b0;
+        end
+    end
+    @(posedge clk);
+    write_cfg <= 0;
+
+endtask
+
+task test_uart(input logic [3:0] data);
+
+    @(posedge clk);
+    rx_vin <= 1'b1;
+    rx_din <= data[3];
+    @(posedge clk);
+    rx_din <= data[2];
+    @(posedge clk);
+    rx_din <= data[1];
+    @(posedge clk);
+    rx_din <= data[0];
+    @(posedge clk);
+    rx_vin <= 1'b0;
+
+endtask
+
+
 initial begin
 
-    test_sequence(4'b1100); // INIT
-
-    repeat(15)
+    repeat(5)
         @(posedge clk);
 
-    test_sequence(4'b0001); // MODE_COUNT
+    test_uart(4'b0110);
 
-    repeat(15)
-        @(posedge clk);
+    
 
-    test_sequence(4'b0010); // MODE_READ_1
+    test_uart(4'b1001);
 
-    repeat(15)
-        @(posedge clk);
+    
 
-    test_sequence(4'b0011); // MODE_READ_2
+    test_uart(4'b0001);
 
-    repeat(15)
-        @(posedge clk);
+    
 
-    test_sequence(4'b0100); // MODE_READ_3
+    test_uart(4'b0011);
 
-    repeat(15)
-        @(posedge clk);
+    
 
-    test_sequence(4'b0101); // MODE_WRITE_1
+    test_uart(4'b1101);
 
-    repeat(15)
-        @(posedge clk);
+    
 
-    test_sequence(4'b0110); // MODE_WRITE_2
+    test_uart(4'b1011);
 
-    //repeat(15)
-        //@(posedge clk);
-
-    //test_sequence(4'b0111); // MODE_WRITE_3
-
-    repeat(15)
-        @(posedge clk);
-
-    test_sequence(4'b1001); // PIXELS_READ
-
-    repeat(15)
-        @(posedge clk);
-
-    test_sequence(4'b1000); // PIXEL_CONFIG_STORE
-
-    repeat(15)
-        @(posedge clk);
-
-    test_sequence(4'b1010); // PIXELS_CLEAR
-
-    repeat(15)
-        @(posedge clk);
-
-    test_sequence(4'b1011); // PIXELS_WRITE
-
-    repeat(15)
-        @(posedge clk);
 
     $finish;
 end

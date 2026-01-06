@@ -16,7 +16,6 @@ module FIFO #(
 
     localparam ADDR_WIDTH = $clog2(DEPTH);
     logic [ADDR_WIDTH-1:0] rptr, wptr;
-    logic full, empty;
     logic last_was_read;
     logic [WIDTH-1:0] mem [0:DEPTH-1];
 
